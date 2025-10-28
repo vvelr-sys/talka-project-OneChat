@@ -1,0 +1,25 @@
+.spaceList::-webkit-scrollbar {
+    height: 1px;
+    width: 5px;
+}
+*::-webkit-scrollbar-track {
+    border-radius: 5px;
+    background-color: #55555550;
+}
+
+*::-webkit-scrollbar-track:hover {
+    background-color: #42424250;
+}
+
+*::-webkit-scrollbar-track:active {
+    background-color: #b8c0c2;
+}
+
+*::-webkit-scrollbar-thumb {
+    border-radius: 5px;
+    background-color: #ffffff5e;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+    background-color: #707070;
+}
