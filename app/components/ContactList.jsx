@@ -1,8 +1,9 @@
 "use client";
 import React, { useState, useEffect, useMemo } from 'react'; 
 import { mockContacts } from '@/app/data/mockContacts'; 
-import EditContactModal from './EditContacts'; 
-import FilterPopup from './FilterPopup';
+import ContactDetail from '@/app/components/ContactDetail'; 
+import FilterPopup from '@/app/components/FilterPopup';
+import AddContactModal from '@/app/components/AddContact';
 
 
 const AVAILABLE_TAGS = [...new Set(mockContacts.map(c => c.tags).filter(Boolean))];
@@ -14,6 +15,8 @@ export default function ContactList() {
     const [contacts, setContacts] = useState(mockContacts); 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedContact, setSelectedContact] = useState(null);
+
+    const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
     const [searchTerm, setSearchTerm] = useState("");
     const [filters, setFilters] = useState({
@@ -53,6 +56,37 @@ export default function ContactList() {
         console.log("Saved:", contactToSave); 
     };
 
+    const handleDeleteContact = (contactId) => {
+        const newContacts = contacts.filter(c => c.id !== contactId);
+        setContacts(newContacts);
+        
+        const mockIndex = mockContacts.findIndex(c => c.id === contactId);
+        if (mockIndex !== -1) {
+            mockContacts.splice(mockIndex, 1);
+        }
+        console.log("Deleted:", contactId);
+    };
+
+    const handleAddContact = (newContactData) => {
+        const newId = Date.now();
+        const nameQuery = newContactData.name ? newContactData.name.replace(' ', '+') : 'New+User';
+        const imgUrl = `https://ui-avatars.com/api/?name=${nameQuery}&background=random`;
+
+        const newContact = {
+            ...newContactData,
+            id: newId,
+            imgUrl: imgUrl,
+        };
+
+        setContacts(prevContacts => [newContact, ...prevContacts]);
+
+        mockContacts.unshift(newContact);
+
+        setIsAddModalOpen(false);
+        console.log("Added:", newContact);
+    };
+
+
     const filteredContacts = useMemo(() => {
         return contacts.filter(contact => {
             const nameMatch = contact.name.toLowerCase().includes(searchTerm.toLowerCase());
@@ -76,7 +110,6 @@ export default function ContactList() {
 
                 <div className="flex justify-between flex-col md:flex-row items-center mb-6 px-4 gap-4 md:gap-4"> 
                     
-                    {/* Search Bar */}
                     <div className="search flex items-center text-white bg-[rgba(32,41,59,0.25)] rounded-2xl py-2 px-4 w-full md:w-1/5 md:mr-5"> 
                         <i className="fa-solid fa-magnifying-glass mr-3"></i>
                         <input 
@@ -89,7 +122,10 @@ export default function ContactList() {
                     </div>
 
                     <div className="flex items-center gap-4 w-full md:w-auto">
-                        <div className="addcontact shrink-0 flex items-center justify-center text-white bg-[rgba(88,40,201,0.4)] shadow-2xl rounded-2xl py-2 px-4 cursor-pointer hover:bg-[rgba(88,40,201,0.6)] w-full md:w-auto md:mr-3">
+                        <div 
+                            className="addcontact shrink-0 flex items-center justify-center text-white bg-[rgba(88,40,201,0.4)] shadow-2xl rounded-2xl py-2 px-4 cursor-pointer hover:bg-[rgba(88,40,201,0.6)] w-full md:w-auto md:mr-3"
+                            onClick={() => setIsAddModalOpen(true)}
+                        >
                             <i className="fa-solid fa-plus mr-3"></i>
                             <button>Add Contact</button> 
                         </div>
@@ -120,12 +156,13 @@ export default function ContactList() {
                 <div className="flex-1 overflow-y-auto overflow-x-auto">
                     <div className="min-w-[960px]">
 
-                        <div className="grid grid-cols-[auto_2fr_repeat(5,1fr)] gap-x-4 items-center py-3 border-b border-gray-500/30 text-gray-300 font-semibold text-sm px-4 ">
+                        <div className="grid grid-cols-[auto_2fr_repeat(6,1fr)] gap-x-4 items-center py-3 border-b border-gray-500/30 text-gray-300 font-semibold text-sm px-4 ">
                             <input type="checkbox" className="bg-black border-gray-500/50 rounded" />
                             <span>Name</span>
                             <span>Channel</span>
                             <span>Email</span>
                             <span>Phone</span>
+                            <span>Country</span>
                             <span>Tags</span>
                             <span>Status</span>
                         </div>
@@ -135,7 +172,7 @@ export default function ContactList() {
                                 <div 
                                     key={contact.id} 
                                     onClick={() => handleRowClick(contact)}
-                                    className="grid grid-cols-[auto_2fr_repeat(5,1fr)] gap-x-4 items-center py-3 border-b border-gray-500/20 hover:bg-white/10 cursor-pointer px-4"
+                                    className="grid grid-cols-[auto_2fr_repeat(6,1fr)] gap-x-4 items-center py-3 border-b border-gray-500/20 hover:bg-white/10 cursor-pointer px-4"
                                 >
                                     <input 
                                         type="checkbox" 
@@ -156,7 +193,21 @@ export default function ContactList() {
                                     </div>
 
                                     <span className={!contact.email ? "text-gray-400" : ""}>{contact.email || "N/A"}</span>
-                                    <span className={!contact.phone ? "text-gray-400" : ""}>{contact.phone || "N/A"}</span>
+                                    
+                                    <span className={!contact.phone ? "text-gray-400" : ""}>
+                                        {contact.phone ? (
+                                            <>
+                                                {contact.phonePrefix && `${contact.phonePrefix}`}
+                                                {contact.phone}
+                                            </>
+                                        ) : (
+                                            "N/A"
+                                        )}
+                                    </span>
+
+                                    <span className={!contact.country ? "text-gray-400" : ""}>
+                                        {contact.country || "N/A"}
+                                    </span>
 
                                     <div className="flex items-center">
                                         {contact.tags === 'VIP' ? (
@@ -180,11 +231,21 @@ export default function ContactList() {
 
             
             {isModalOpen && selectedContact && (
-                <EditContactModal 
+                <ContactDetail
                     contact={selectedContact}
                     onClose={handleCloseModal}
                     onSave={handleSaveChanges}
-                    AVAILABLE_TAGS={AVAILABLE_TAGS} 
+                    onDelete={handleDeleteContact} 
+                    AVAILABLE_TAGS={AVAILABLE_TAGS}
+                />
+            )}
+
+            {isAddModalOpen && (
+                <AddContactModal
+                    onClose={() => setIsAddModalOpen(false)}
+                    onAdd={handleAddContact}
+                    AVAILABLE_TAGS={AVAILABLE_TAGS}
+                    AVAILABLE_CHANNELS={AVAILABLE_CHANNELS} 
                 />
             )}
         </div> 

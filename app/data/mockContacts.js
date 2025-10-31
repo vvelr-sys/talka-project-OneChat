@@ -7,7 +7,9 @@ export const mockContacts = [
         email: null,
         phone: null,
         tags: "VIP",
-        status: "Open"
+        status: "Open",
+        country: null,
+        phonePrefix: null,
     },
     {
         id: 2,
@@ -17,27 +19,33 @@ export const mockContacts = [
         email: null,
         phone: null,
         tags: null,
-        status: "Open"
+        status: "Open",
+        country: null,
+        phonePrefix: null,
     },
     {
         id: 3,
         name: "Natthapong Hanchaipa",
         imgUrl: "https://ui-avatars.com/api/?name=NH&background=random",
         channel: "Line",
-        email: "natthapong.han@spumail.net",
-        phone: "0830116652",
+        email: null,
+        phone: null,
         tags: null,
-        status: "Open"
+        status: "Open",
+        country: null,
+        phonePrefix: null,
     },
-    // เพิ่มข้อมูลสำหรับ Test Filter
+
     {
         id: 4,
         name: "Jane Doe",
         imgUrl: "https://ui-avatars.com/api/?name=Jane+Doe&background=random",
         channel: "Line",
         email: "jane.doe@example.com",
-        phone: "0801234567",
+        phone: "800000000",
         tags: null,
-        status: "Closed"
+        status: "Closed",
+        country: null,
+        phonePrefix: "66+",
     }
 ];
