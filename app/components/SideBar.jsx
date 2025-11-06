@@ -11,17 +11,23 @@ import {
     LayoutDashboard,
     Shield,
     ChevronDown,
+    Megaphone,
+    Building2
 } from "lucide-react";
 
 export default function Sidebar() {
     const pathname = usePathname();
     const [openDropdown, setOpenDropdown] = useState(null);
 
+    const [isOpenWorkspace, setIsOpenWorkspace] = useState(false);
+    const [selectedWorkspace, setSelectedWorkspace] = useState("Work Space");
+    const workspaces = ["Work Space", "Development", "Marketing", "Support Team"];
+
     return (
-        <div className="flex p-3 ">
+        <div className="flex p-3">
             {/* Sidebar */}
             <div
-                className="relative w-[250px] h-[98vh] rounded-3xl overflow-hidden"
+                className="relative w-[250px] h-[98vh] rounded-3xl overflow-hidden flex flex-col justify-between"
                 style={{
                     background:
                         "linear-gradient(180deg, rgba(190, 126, 199, 0.5), rgba(139, 90, 158, 0.5))",
@@ -44,7 +50,8 @@ export default function Sidebar() {
                     }}
                 ></div>
 
-                <div className="relative z-10 p-6">
+                {/* ---- Sidebar Content ---- */}
+                <div className="relative z-10 p-6 flex flex-col flex-1 overflow-y-auto">
                     {/* Header dots */}
                     <div className="flex items-center gap-2 mb-5">
                         <div className="flex gap-1.5">
@@ -86,111 +93,166 @@ export default function Sidebar() {
                             </Link>
 
                             {/* All Chat Dropdown */}
-                            <div>
-                                <button
-                                    onClick={() =>
-                                        setOpenDropdown(openDropdown === "all-chat" ? null : "all-chat")
-                                    }
-                                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors duration-300 ${pathname.startsWith("/chat")
-                                        ? "bg-white/20 text-white"
-                                        : "text-white/80 hover:bg-white/10 hover:text-white"
-                                        }`}
-                                >
-                                    <MessageCircle size={20} />
-                                    <span className="text-sm font-medium">All Chat</span>
-                                    <ChevronDown
-                                        size={16}
-                                        className={`ml-auto transition-transform duration-300 ${openDropdown === "all-chat" ? "rotate-180" : ""
-                                            }`}
-                                    />
-                                </button>
-                                <div
-                                    className={`overflow-hidden transition-all duration-300 ease-in-out ${openDropdown === "all-chat"
-                                        ? "max-h-40 opacity-100 mt-1"
-                                        : "max-h-0 opacity-0"
-                                        }`}
-                                >
-                                    <div className="ml-4 flex flex-col space-y-1">
-                                        <Link
-                                            href="/chat/allchat"
-                                            className={`w-full text-left px-4 py-2 rounded-lg text-sm transition-colors duration-300 ${pathname === "/chat/discord"
-                                                ? "bg-white/20 text-white"
-                                                : "text-white/70 hover:bg-white/10 hover:text-white"
-                                                }`}
-                                        >
-                                            All Chat
-                                        </Link>
-                                        <Link
-                                            href="/chat/facebook"
-                                            className={`w-full text-left px-4 py-2 rounded-lg text-sm transition-colors duration-300 ${pathname === "/chat/facebook"
-                                                ? "bg-white/20 text-white"
-                                                : "text-white/70 hover:bg-white/10 hover:text-white"
-                                                }`}
-                                        >
-                                            Facebook
-                                        </Link>
-                                        <Link
-                                            href="/chat/line"
-                                            className={`w-full text-left px-4 py-2 rounded-lg text-sm transition-colors duration-300 ${pathname === "/chat/line"
-                                                ? "bg-white/20 text-white"
-                                                : "text-white/70 hover:bg-white/10 hover:text-white"
-                                                }`}
-                                        >
-                                            Line
-                                        </Link>
-                                    </div>
-                                </div>
-                            </div>
+                            <DropdownMenu
+                                title="All Chat"
+                                icon={<MessageCircle size={20} />}
+                                isOpen={openDropdown === "all-chat"}
+                                onToggle={() =>
+                                    setOpenDropdown(openDropdown === "all-chat" ? null : "all-chat")
+                                }
+                                links={[
+                                    { href: "/chat/allchat", label: "All Chat" },
+                                    { href: "/chat/facebook", label: "Facebook" },
+                                    { href: "/chat/line", label: "Line" },
+                                ]}
+                                pathname={pathname}
+                            />
 
                             {/* Contact */}
-                            <Link
-                                href="/contact"
-                                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors duration-300 ${pathname.startsWith("/contact")
-                                    ? "bg-white/20 text-white"
-                                    : "text-white/80 hover:bg-white/10 hover:text-white"
-                                    }`}
-                            >
-                                <Contact size={20} />
-                                <span className="text-sm font-medium">Contact</span>
-                            </Link>
-
+                            <SidebarLink href="/contact" icon={<Contact size={20} />} label="Contact" pathname={pathname} />
                             {/* AI Support */}
-                            <Link
-                                href="/ai-support"
-                                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors duration-300 ${pathname.startsWith("/ai-support")
-                                    ? "bg-white/20 text-white"
-                                    : "text-white/80 hover:bg-white/10 hover:text-white"
-                                    }`}
-                            >
-                                <Headphones size={20} />
-                                <span className="text-sm font-medium">AI Support</span>
-                            </Link>
-
+                            <SidebarLink href="/ai-support" icon={<Headphones size={20} />} label="AI Support" pathname={pathname} />
                             {/* Dashboard */}
-                            <Link
-                                href="/dashboard"
-                                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors duration-300 ${pathname.startsWith("/dashboard")
-                                    ? "bg-white/20 text-white"
-                                    : "text-white/80 hover:bg-white/10 hover:text-white"
-                                    }`}
-                            >
-                                <LayoutDashboard size={20} />
-                                <span className="text-sm font-medium">Dashboard</span>
-                            </Link>
+                            <SidebarLink href="/dashboard" icon={<LayoutDashboard size={20} />} label="Dashboard" pathname={pathname} />
 
-                            {/* Admin Panel */}
-                            <Link
-                                href="/admin"
-                                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors duration-300 ${pathname.startsWith("/admin")
-                                    ? "bg-white/20 text-white"
-                                    : "text-white/80 hover:bg-white/10 hover:text-white"
-                                    }`}
-                            >
-                                <Shield size={20} />
-                                <span className="text-sm font-medium">Admin Panel</span>
-                            </Link>
+                            {/* Report Dropdown */}
+                            <DropdownMenu
+                                title="Report"
+                                icon={<Megaphone size={20} />}
+                                isOpen={openDropdown === "Report"}
+                                onToggle={() =>
+                                    setOpenDropdown(openDropdown === "Report" ? null : "Report")
+                                }
+                                links={[
+                                    { href: "/report/allchat", label: "All Chat" },
+                                    { href: "/report/facebook", label: "Facebook" },
+                                    { href: "/report/line", label: "Line" },
+                                ]}
+                                pathname={pathname}
+                            />
+
+                            {/* Admin Dropdown */}
+                            <DropdownMenu
+                                title="Admin Panel"
+                                icon={<Shield size={20} />}
+                                isOpen={openDropdown === "Admin"}
+                                onToggle={() =>
+                                    setOpenDropdown(openDropdown === "Admin" ? null : "Admin")
+                                }
+                                links={[
+                                    { href: "/admin/info", label: "General Info" },
+                                    { href: "/admin/usersetting", label: "User Setting" },
+                                    { href: "/admin/teamsetting", label: "Team Setting" },
+                                    { href: "/admin/tagsetting", label: "Tag Setting" },
+                                    { href: "/admin/ai-prompt", label: "AI Prompt" },
+                                ]}
+                                pathname={pathname}
+                            />
                         </nav>
                     </div>
+                </div>
+
+                {/* ---- Workspace Selector---- */}
+                <div className="relative z-20 p-3">
+                    <div className="relative">
+                        <button
+                            onClick={() => setIsOpenWorkspace(!isOpenWorkspace)}
+                            className="w-full flex items-center justify-between gap-3 bg-white/90 text-black px-4 py-3 rounded-2xl shadow-md transition-all hover:bg-white"
+                        >
+                            <div className="flex items-center gap-3">
+                                <div className="w-9 h-9 flex items-center justify-center bg-red-600 rounded-xl">
+                                    <Building2 size={20} color="white" />
+                                </div>
+                                <span className="font-medium text-sm">{selectedWorkspace}</span>
+                            </div>
+                            <ChevronDown
+                                size={18}
+                                className={`transition-transform duration-300 ${isOpenWorkspace ? "rotate-180" : ""}`}
+                            />
+                        </button>
+
+                        {/* Dropdown เปิดขึ้นบน */}
+                        <div
+                            className={`absolute bottom-full mb-2 w-full bg-white/80 backdrop-blur-md rounded-2xl shadow-lg overflow-hidden border border-white/40 transition-all duration-300 ${
+                                isOpenWorkspace ? "max-h-60 opacity-100" : "max-h-0 opacity-0"
+                            }`}
+                        >
+                            {workspaces.map((ws) => (
+                                <button
+                                    key={ws}
+                                    onClick={() => {
+                                        setSelectedWorkspace(ws);
+                                        setIsOpenWorkspace(false);
+                                    }}
+                                    className={`w-full text-left px-4 py-3 text-sm font-medium transition-colors ${
+                                        selectedWorkspace === ws
+                                            ? "bg-purple-200/60 text-purple-900"
+                                            : "text-gray-700 hover:bg-white/60"
+                                    }`}
+                                >
+                                    {ws}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+// Function for setting and Link
+function SidebarLink({ href, icon, label, pathname }) {
+    return (
+        <Link
+            href={href}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors duration-300 ${
+                pathname.startsWith(href)
+                    ? "bg-white/20 text-white"
+                    : "text-white/80 hover:bg-white/10 hover:text-white"
+            }`}
+        >
+            {icon}
+            <span className="text-sm font-medium">{label}</span>
+        </Link>
+    );
+}
+
+function DropdownMenu({ title, icon, links, isOpen, onToggle, pathname }) {
+    return (
+        <div>
+            <button
+                onClick={onToggle}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors duration-300 ${
+                    isOpen ? "bg-white/20 text-white" : "text-white/80 hover:bg-white/10 hover:text-white"
+                }`}
+            >
+                {icon}
+                <span className="text-sm font-medium">{title}</span>
+                <ChevronDown
+                    size={16}
+                    className={`ml-auto transition-transform duration-300 ${isOpen ? "rotate-180" : ""}`}
+                />
+            </button>
+            <div
+                className={`overflow-hidden transition-all duration-300 ease-in-out ${
+                    isOpen ? "max-h-80 opacity-100 mt-1" : "max-h-0 opacity-0"
+                }`}
+            >
+                <div className="ml-4 flex flex-col space-y-1">
+                    {links.map((link) => (
+                        <Link
+                            key={link.href}
+                            href={link.href}
+                            className={`w-full text-left px-4 py-2 rounded-lg text-sm transition-colors duration-300 ${
+                                pathname === link.href
+                                    ? "bg-white/20 text-white"
+                                    : "text-white/70 hover:bg-white/10 hover:text-white"
+                            }`}
+                        >
+                            {link.label}
+                        </Link>
+                    ))}
                 </div>
             </div>
         </div>

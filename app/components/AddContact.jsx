@@ -10,12 +10,12 @@ export default function AddContactModal({
     
     const [formData, setFormData] = useState({
         name: "",
-        email: null,
-        phone: null,
+        email: "",
+        phone: "",
         phonePrefix: "66+", 
-        country: null, 
-        tags: null,
-        channel: null, 
+        country: "", 
+        tags: "",
+        channel: "", 
         status: "Open" 
     });
 
