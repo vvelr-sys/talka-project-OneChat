@@ -1,9 +1,7 @@
 "use client";
 import { useState } from "react";
-import { FaTag } from "react-icons/fa";
-import { MdMenuBook } from "react-icons/md";
-import { Edit, Trash2, Plus, X } from "lucide-react";
-import EmojiPicker from "emoji-picker-react"; // <== Added
+import { Edit, Trash2, Plus, X, BookOpenText, Tag } from "lucide-react";
+import EmojiPicker from "emoji-picker-react";
 
 export default function TagsPage() {
   const [tags, setTags] = useState([]);
@@ -11,6 +9,7 @@ export default function TagsPage() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editTag, setEditTag] = useState(null);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [deleteTag, setDeleteTag] = useState(null);
   const [newTag, setNewTag] = useState({
     name: "",
     color: "",
@@ -29,6 +28,7 @@ export default function TagsPage() {
     "#FF69B4",
   ];
 
+  // สร้างแท็กใหม่
   const handleCreateTag = () => {
     if (!newTag.name || !newTag.color)
       return alert("Please fill name and color");
@@ -37,32 +37,46 @@ export default function TagsPage() {
     setIsModalOpen(false);
   };
 
-  const handleDeleteTag = (id) => {
-    setTags(tags.filter((tag) => tag.id !== id));
+  // เปิด modal ลบ
+  const handleOpenDeleteModal = (tag) => {
+    setDeleteTag(tag);
   };
 
+  // ปิด modal ลบ
+  const handleCloseDeleteModal = () => {
+    setDeleteTag(null);
+  };
+
+  // ยืนยันการลบ
+  const confirmDeleteTag = () => {
+    setTags(tags.filter((t) => t.id !== deleteTag.id));
+    handleCloseDeleteModal();
+  };
+
+  // แก้ไขสีแท็ก
   const handleEditColor = (id, color) => {
     setTags(tags.map((tag) => (tag.id === id ? { ...tag, color } : tag)));
     setIsEditModalOpen(false);
+    setEditTag(null);
   };
 
   return (
-    <div className="w-full h-[95vh] p-4">
+    <div className="w-full h-[94vh] p-4">
       <div className="bg-[rgba(32,41,59,0.25)] border border-[rgba(254,253,253,0.5)] backdrop-blur-xl rounded-3xl shadow-2xl pt-5 px-4 h-full flex flex-col">
-
         {/* Header */}
         <div className="flex justify-between items-start p-8">
           <div className="flex items-center gap-3">
-            <FaTag className="text-white" size={52} />
+            <Tag className="text-white" size={52} />
             <div>
               <h1 className="text-xl font-semibold text-white">Tags</h1>
-              <p className="text-sm text-white/70">Create and manage Tags to organize conversations and inboxes.</p>
+              <p className="text-sm text-white/70">
+                Create and manage Tags to organize conversations and inboxes.
+              </p>
             </div>
           </div>
-
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2 text-white/80 py-2 px-4 cursor-pointer transition">
-              <MdMenuBook size={20} />
+              <BookOpenText size={24} />
               <span className="text-sm">Learn more</span>
             </div>
           </div>
@@ -79,21 +93,33 @@ export default function TagsPage() {
         </button>
 
         {/* Tags Display */}
-        <div className="flex-1 flex flex-col justify-start text-center overflow-y-auto mt-8 px-10">
+        <div className="flex-1 flex flex-col justify-start text-center overflow-y-auto mt-12 px-10 gap-2">
           {tags.length === 0 ? (
             <>
-              <FaTag className="text-white/70 mb-6 mt-10 mx-auto" size={100} />
-              <h2 className="text-white text-xl font-semibold mb-2">No Tags added yet</h2>
-              <p className="text-gray-400 text-sm mb-6 max-w-md mx-auto">Tags added to your workspace will be listed here.</p>
+              <i className="fa-solid fa-tag text-9xl mx-auto p-4"></i>
+              <h2 className="text-white text-xl font-semibold mb-2">
+                No Tags added yet
+              </h2>
+              <p className="text-gray-400 text-sm mb-6 max-w-md mx-auto">
+                Tags added to your workspace will be listed here.
+              </p>
             </>
           ) : (
             <div className="w-full flex flex-col gap-3">
               {tags.map((tag) => (
-                <div key={tag.id} className="p-4 rounded-xl shadow-lg text-left bg-white/10 border border-white/20">
+                <div
+                  key={tag.id}
+                  className="p-4 rounded-xl shadow-lg text-left bg-white/10 border border-white/20"
+                >
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
-                      <span className="w-4 h-4 rounded-full" style={{ backgroundColor: tag.color }}></span>
-                      <h3 className="text-white font-semibold">{tag.emoji} {tag.name}</h3>
+                      <span
+                        className="w-4 h-4 rounded-full"
+                        style={{ backgroundColor: tag.color }}
+                      ></span>
+                      <h3 className="text-white font-semibold">
+                        {tag.emoji} {tag.name}
+                      </h3>
                     </div>
                     <div className="flex gap-2 text-xs">
                       <button
@@ -106,7 +132,7 @@ export default function TagsPage() {
                         <Edit size={16} /> Edit
                       </button>
                       <button
-                        onClick={() => handleDeleteTag(tag.id)}
+                        onClick={() => handleOpenDeleteModal(tag)}
                         className="flex items-center gap-1 bg-red-500/30 border border-red-400 text-red-200 rounded-lg px-3 py-1 text-sm cursor-pointer hover:bg-red-500/50 transition"
                       >
                         <Trash2 size={16} /> Delete
@@ -120,14 +146,54 @@ export default function TagsPage() {
           )}
         </div>
 
+        {/* Delete Confirmation Modal */}
+        {deleteTag && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex justify-center items-center z-50">
+            <div className="bg-[#1E1E1E] border border-white/20 rounded-2xl p-6 w-[380px] text-white shadow-2xl relative">
+              <button
+                onClick={handleCloseDeleteModal}
+                className="absolute top-4 right-4 text-gray-400 hover:text-white cursor-pointer"
+              >
+                <X size={22} />
+              </button>
+              <h2 className="text-lg font-semibold mb-2">
+                Delete Tag “{deleteTag.name}”?
+              </h2>
+              <p className="text-gray-400 text-sm mb-6">
+                This action cannot be undone. Are you sure you want to delete
+                this tag?
+              </p>
+
+              <div className="flex justify-end gap-3 mt-2">
+                <button
+                  onClick={handleCloseDeleteModal}
+                  className="text-gray-400 hover:text-white cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmDeleteTag}
+                  className="flex items-center gap-1 bg-red-500/30 border border-red-400 text-red-200 rounded-lg px-4 py-1 text-sm cursor-pointer hover:bg-red-500/50 transition"
+                >
+                  <Trash2 size={16} /> Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Create Modal */}
         {isModalOpen && (
           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center items-center z-50">
             <div className="bg-[#1E1E1E] text-white rounded-2xl p-6 w-[400px] shadow-2xl border border-white/20">
-
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-lg font-semibold">Create Tag</h2>
-                <button onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:text-white cursor-pointer"><X size={22} /></button>
+                <button
+                  onClick={() => setIsModalOpen(false)}
+                  className="text-gray-400 hover:text-white cursor-pointer"
+                >
+                  <X size={22} />
+                </button>
               </div>
 
               {/* Tag Name + Emoji */}
@@ -144,7 +210,9 @@ export default function TagsPage() {
                   placeholder="Name"
                   className="w-full bg-[#2b2b2b] text-white p-2 rounded-lg outline-none"
                   value={newTag.name}
-                  onChange={(e) => setNewTag({ ...newTag, name: e.target.value })}
+                  onChange={(e) =>
+                    setNewTag({ ...newTag, name: e.target.value })
+                  }
                 />
               </div>
 
@@ -167,7 +235,9 @@ export default function TagsPage() {
                     key={c}
                     onClick={() => setNewTag({ ...newTag, color: c })}
                     className={`w-6 h-6 rounded-full cursor-pointer border-2 ${
-                      newTag.color === c ? "border-white scale-110" : "border-transparent"
+                      newTag.color === c
+                        ? "border-white scale-110"
+                        : "border-transparent"
                     }`}
                     style={{ backgroundColor: c }}
                   ></div>
@@ -180,11 +250,18 @@ export default function TagsPage() {
                 className="w-full bg-[#2b2b2b] text-white p-2 rounded-lg mb-4 outline-none resize-none"
                 rows={3}
                 value={newTag.description}
-                onChange={(e) => setNewTag({ ...newTag, description: e.target.value })}
+                onChange={(e) =>
+                  setNewTag({ ...newTag, description: e.target.value })
+                }
               />
 
               <div className="flex justify-end gap-3">
-                <button onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:text-white cursor-pointer">Cancel</button>
+                <button
+                  onClick={() => setIsModalOpen(false)}
+                  className="text-gray-400 hover:text-white cursor-pointer"
+                >
+                  Cancel
+                </button>
                 <button
                   onClick={handleCreateTag}
                   className="flex items-center gap-1 bg-white/20 border border-white/40 text-white rounded-lg px-3 py-1 text-sm cursor-pointer hover:bg-white/30 transition"
@@ -201,8 +278,18 @@ export default function TagsPage() {
           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center items-center z-50">
             <div className="bg-[#1E1E1E] text-white rounded-2xl p-6 w-[400px] shadow-2xl border border-white/20">
               <div className="flex justify-between items-center mb-4">
-                <h2 className="text-lg font-semibold">Edit Tag Color — {editTag.name}</h2>
-                <button onClick={() => setIsEditModalOpen(false)}>✕</button>
+                <h2 className="text-lg font-semibold">
+                  Edit Tag Color — {editTag.name}
+                </h2>
+                <button
+                  onClick={() => {
+                    setIsEditModalOpen(false);
+                    setEditTag(null);
+                  }}
+                  className="text-gray-400 hover:text-white cursor-pointer"
+                >
+                  <X size={22} />
+                </button>
               </div>
 
               <label className="text-sm">Select New Color</label>
@@ -212,14 +299,18 @@ export default function TagsPage() {
                     key={c}
                     onClick={() => handleEditColor(editTag.id, c)}
                     className={`w-6 h-6 rounded-full cursor-pointer border-2 ${
-                      editTag.color === c ? "border-white scale-110" : "border-transparent"
+                      editTag.color === c
+                        ? "border-white scale-110"
+                        : "border-transparent"
                     }`}
                     style={{ backgroundColor: c }}
                   ></div>
                 ))}
               </div>
 
-              <p className="text-gray-400 text-sm">Click a color to update this tag.</p>
+              <p className="text-gray-400 text-sm">
+                Click a color to update this tag.
+              </p>
             </div>
           </div>
         )}
