@@ -1,10 +1,8 @@
 "use client";
-import { Info, X, Trash2, Edit } from "lucide-react";
-import { HiOutlineUserGroup } from "react-icons/hi";
+import { Info, X, Trash2, Edit, UsersRound } from "lucide-react";
 import { useEffect, useState } from "react";
 
-//  แยก TeamModal ออกมาเป็น Component ด้านนอก
-
+// Modal สำหรับ Add / Edit Team
 function TeamModal({
   isOpen,
   title,
@@ -71,7 +69,7 @@ function TeamModal({
                 Array.from(e.target.selectedOptions, (o) => o.value)
               )
             }
-            className="w-full bg-[#1c1d25] border border-white/30 rounded-lg px-3 py-2 text-white h-[110px]"
+            className="w-full bg-[#1c1d25] border border-white/30 rounded-lg px-3 py-2 text-white h-[110px] cursor-pointer"
           >
             {userOptions.map((user) => (
               <option key={user} value={user}>
@@ -82,12 +80,15 @@ function TeamModal({
         </div>
 
         <div className="flex justify-end gap-3 mt-8">
-          <button onClick={onClose} className="text-gray-300 hover:text-white">
+          <button
+            onClick={onClose}
+            className="text-gray-300 hover:text-white cursor-pointer"
+          >
             Cancel
           </button>
           <button
             onClick={onConfirm}
-            className="bg-white/20 border border-white/40 text-white px-5 py-1.5 rounded-lg hover:bg-white/30"
+            className="bg-white/20 border border-white/40 text-white px-5 py-1.5 rounded-lg hover:bg-white/30 cursor-pointer"
           >
             Save
           </button>
@@ -97,13 +98,62 @@ function TeamModal({
   );
 }
 
-// Component หลัก: Page
+// Modal ยืนยันการลบทีม
+function ConfirmDeleteModal({ isOpen, teamName, onClose, onConfirm }) {
+  if (!isOpen) return null;
 
+  return (
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex justify-center items-center z-50">
+      <div className="relative bg-[#1E1E1E] border border-white/20 rounded-2xl p-6 w-[380px] text-white shadow-2xl">
+        {/* ปุ่มปิดมุมขวาบน */}
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 text-gray-400 hover:text-white cursor-pointer"
+        >
+          <X size={22} />
+        </button>
+
+        {/* เนื้อหา */}
+        <div className="flex flex-col gap-4 mt-2">
+          <h2 className="text-lg font-semibold flex flex-col items-center gap-2">
+            Delete Team
+          </h2>
+          <p className="text-gray-400 text-sm  text-center">
+            Are you sure you want to delete <b>{teamName}</b>? <br />
+            This action cannot be undone.
+          </p>
+
+          {/* ปุ่มอยู่ด้านขวา */}
+          <div className="flex justify-end gap-3 mt-4">
+            <button
+              onClick={onClose}
+              className="text-gray-300 hover:text-white cursor-pointer"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={onConfirm}
+              className="flex items-center gap-1 bg-red-500/30 border border-red-400 text-red-200 rounded-lg px-4 py-2 text-sm cursor-pointer hover:bg-red-500/50 transition"
+            >
+              <Trash2 size={16} />
+              Delete
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Component หลัก
 export default function Page() {
   const [teams, setTeams] = useState([]);
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+
   const [editTeam, setEditTeam] = useState(null);
+  const [deleteTeam, setDeleteTeam] = useState(null);
 
   const [teamName, setTeamName] = useState("");
   const [teamDesc, setTeamDesc] = useState("");
@@ -117,7 +167,7 @@ export default function Page() {
     if (storedTeams) setTeams(JSON.parse(storedTeams));
   }, []);
 
-  // บันทึกทีมลง localStorage ทุกครั้งที่ teams เปลี่ยน
+  // บันทึกทีมลง localStorage
   useEffect(() => {
     localStorage.setItem("teams", JSON.stringify(teams));
   }, [teams]);
@@ -128,7 +178,6 @@ export default function Page() {
     setTeamMembers([]);
   };
 
-  // ตรวจสอบก่อนสร้างทีม
   const validateTeam = (isEdit = false) => {
     if (!teamName.trim()) {
       alert("Please enter a team name");
@@ -153,7 +202,6 @@ export default function Page() {
     return true;
   };
 
-  // เพิ่มทีมใหม่
   const handleAddTeam = () => {
     if (!validateTeam()) return;
 
@@ -170,14 +218,16 @@ export default function Page() {
     setIsAddOpen(false);
   };
 
-  // ลบทีม
   const handleDelete = (id) => {
-    if (confirm("Are you sure you want to delete this team?")) {
-      setTeams((prev) => prev.filter((team) => team.id !== id));
-    }
+    setTeams((prev) => prev.filter((team) => team.id !== id));
+    setIsDeleteOpen(false);
   };
 
-  // เปิด modal แก้ไข
+  const handleOpenDelete = (team) => {
+    setDeleteTeam(team);
+    setIsDeleteOpen(true);
+  };
+
   const handleOpenEdit = (team) => {
     setEditTeam(team);
     setTeamName(team.name);
@@ -186,7 +236,6 @@ export default function Page() {
     setIsEditOpen(true);
   };
 
-  // บันทึกการแก้ไข
   const handleSaveEdit = () => {
     if (!validateTeam(true)) return;
 
@@ -211,7 +260,7 @@ export default function Page() {
   // Layout
   return (
     <>
-      {/* Add Modal */}
+      {/* Add / Edit Modal */}
       <TeamModal
         isOpen={isAddOpen}
         title="Add Team"
@@ -226,7 +275,6 @@ export default function Page() {
         userOptions={userOptions}
       />
 
-      {/* Edit Modal */}
       <TeamModal
         isOpen={isEditOpen}
         title="Edit Team"
@@ -244,12 +292,21 @@ export default function Page() {
         userOptions={userOptions}
       />
 
-      <div className="w-full h-[95vh] p-2 md:p-4">
+      {/* Modal Confirm Delete */}
+      <ConfirmDeleteModal
+        isOpen={isDeleteOpen}
+        teamName={deleteTeam?.name}
+        onClose={() => setIsDeleteOpen(false)}
+        onConfirm={() => handleDelete(deleteTeam.id)}
+      />
+
+      {/* Main UI */}
+      <div className="w-full h-[94vh] p-2 md:p-4">
         <div className="bg-[rgba(32,41,59,0.25)] border border-[rgba(254,253,253,0.5)] backdrop-blur-xl rounded-3xl shadow-2xl pt-5 px-4 flex flex-col h-full">
           {/* Header */}
           <div className="relative max-w-3xl p-8">
             <div className="flex items-center gap-3 mb-8">
-              <HiOutlineUserGroup className="text-white" size={52} />
+              <UsersRound className="text-white" size={52} />
               <div>
                 <h1 className="text-xl font-semibold text-white">
                   Team Setting
@@ -270,7 +327,7 @@ export default function Page() {
                 resetForm();
                 setIsAddOpen(true);
               }}
-              className="flex items-center text-white bg-[rgba(255,255,255,0.22)] rounded-2xl py-3 px-5 hover:bg-[#ffffff52]"
+              className="flex items-center text-white bg-[rgba(255,255,255,0.22)] rounded-2xl py-3 px-5 hover:bg-[#ffffff52] cursor-pointer"
             >
               <i className="fa-solid fa-plus mr-2"></i> Add Team
             </button>
@@ -288,8 +345,8 @@ export default function Page() {
           {/* Team List */}
           <div className="flex justify-center items-center px-4">
             {teams.length === 0 ? (
-              <div className="flex flex-col items-center text-center">
-                <HiOutlineUserGroup className="text-white/70" size={250} />
+              <div className="flex flex-col items-center text-center p-8 gap-2">
+                <i className="fa-solid fa-users-viewfinder text-9xl"></i>
                 <h2 className="text-white text-xl font-semibold mb-2">
                   Create your first team
                 </h2>
@@ -327,15 +384,15 @@ export default function Page() {
 
                     <div className="flex gap-3">
                       <button
-                        onClick={() => handleDelete(team.id)}
-                        className="flex items-center gap-1 bg-red-500/30 border border-red-400 text-red-200 rounded-lg px-3 py-1 hover:bg-red-500/50"
+                        onClick={() => handleOpenDelete(team)}
+                        className="flex items-center gap-1 bg-red-500/30 border border-red-400 text-red-200 rounded-lg px-3 py-1 hover:bg-red-500/50 cursor-pointer"
                       >
                         <Trash2 size={16} /> Delete
                       </button>
 
                       <button
                         onClick={() => handleOpenEdit(team)}
-                        className="flex items-center gap-1 bg-white/20 border border-white/40 rounded-lg px-3 py-1 hover:bg-white/30"
+                        className="flex items-center gap-1 bg-white/20 border border-white/40 rounded-lg px-3 py-1 hover:bg-white/30 cursor-pointer"
                       >
                         <Edit size={16} /> Manage
                       </button>

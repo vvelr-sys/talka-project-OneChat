@@ -7,7 +7,7 @@ export default function GeneralInfoPage() {
   const [timezone, setTimezone] = useState("(GMT+07:00) Asia/Bangkok");
 
   return (
-    <div className="w-full h-[95vh] p-2 md:p-4">
+    <div className="w-full h-[94vh] p-2 md:p-4">
       {/* Overlay สำหรับทำให้สีเข้มขึ้นนิดหน่อย */}
       <div className="bg-[rgba(32,41,59,0.25)] border border-[rgba(254,253,253,0.5)] backdrop-blur-xl rounded-3xl shadow-2xl pt-5 px-4 h-full flex flex-col">
         {/* เนื้อหาหลัก */}

@@ -1,7 +1,6 @@
 "use client";
 import { useState } from "react";
-import { Bot, Plus, Edit, Trash2, X } from "lucide-react";
-import { MdMenuBook } from "react-icons/md";
+import { Bot, Plus, Edit, Trash2, X, BookOpenText } from "lucide-react";
 
 export default function AiPromptsPage() {
   const [prompts, setPrompts] = useState([
@@ -38,19 +37,60 @@ export default function AiPromptsPage() {
 
   const [newPrompt, setNewPrompt] = useState({ name: "", action: "" });
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingPromptId, setEditingPromptId] = useState(null);
+  const [deletePrompt, setDeletePrompt] = useState(null);
 
-  const handleAddPrompt = () => {
-    if (!newPrompt.name) return alert("Please enter a prompt name");
-    setPrompts([
-      ...prompts,
-      { id: Date.now(), ...newPrompt, active: true, isDefault: false },
-    ]);
+  // เปิด modal สำหรับ add หรือ edit
+  const openAddModal = () => {
     setNewPrompt({ name: "", action: "" });
+    setEditingPromptId(null);
+    setIsModalOpen(true);
+  };
+
+  const openEditModal = (prompt) => {
+    setNewPrompt({ name: prompt.name, action: prompt.action });
+    setEditingPromptId(prompt.id);
+    setIsModalOpen(true);
+  };
+
+  // ฟังก์ชันบันทึก (add หรือ edit)
+  const handleSavePrompt = () => {
+    if (!newPrompt.name.trim()) return alert("Please enter a prompt name");
+
+    if (editingPromptId) {
+      // แก้ไข prompt เดิม
+      setPrompts(
+        prompts.map((p) =>
+          p.id === editingPromptId ? { ...p, ...newPrompt } : p
+        )
+      );
+    } else {
+      // เพิ่ม prompt ใหม่
+      setPrompts([
+        ...prompts,
+        { id: Date.now(), ...newPrompt, active: true, isDefault: false },
+      ]);
+    }
+
+    setNewPrompt({ name: "", action: "" });
+    setEditingPromptId(null);
     setIsModalOpen(false);
   };
 
-  const handleDelete = (id) => {
-    setPrompts(prompts.filter((p) => p.id !== id));
+  // เปิด modal ลบ
+  const handleOpenDeleteModal = (prompt) => {
+    setDeletePrompt(prompt);
+  };
+
+  // ยกเลิก modal ลบ
+  const handleCloseDeleteModal = () => {
+    setDeletePrompt(null);
+  };
+
+  // ยืนยันลบ
+  const handleConfirmDelete = () => {
+    setPrompts(prompts.filter((p) => p.id !== deletePrompt.id));
+    setDeletePrompt(null);
   };
 
   const handleToggle = (id) => {
@@ -60,7 +100,7 @@ export default function AiPromptsPage() {
   };
 
   return (
-    <div className="w-full h-[95vh] p-4">
+    <div className="w-full h-[94vh] p-4">
       <div className="bg-[rgba(32,41,59,0.25)] border border-[rgba(254,253,253,0.5)] backdrop-blur-xl rounded-3xl shadow-2xl pt-5 px-4 h-full flex flex-col">
         {/* Header */}
         <div className="flex justify-between items-start p-8">
@@ -77,7 +117,7 @@ export default function AiPromptsPage() {
 
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2 text-white/80 py-2 px-4 cursor-pointer transition">
-              <MdMenuBook size={20} />
+              <BookOpenText size={24} />
               <span className="text-sm">Learn more</span>
             </div>
           </div>
@@ -87,7 +127,7 @@ export default function AiPromptsPage() {
 
         {/* Add button */}
         <button
-          onClick={() => setIsModalOpen(true)}
+          onClick={openAddModal}
           className="flex w-fit mx-10 items-center gap-1 text-white bg-[rgba(255,255,255,0.22)] shadow-2xl rounded-xl py-2 px-4 cursor-pointer hover:bg-[#ffffff52] transition"
         >
           <Plus /> New Prompt
@@ -106,17 +146,19 @@ export default function AiPromptsPage() {
               </div>
 
               <div className="flex items-center gap-3">
-                {/* ถ้าไม่ใช่ default prompt ถึงจะมีปุ่ม Delete / Edit */}
                 {!p.isDefault && (
                   <>
                     <button
-                      onClick={() => handleDelete(p.id)}
-                      className="flex items-center gap-1 bg-red-500/30 border border-red-400 text-red-200 rounded-lg px-3 py-1 text-sm hover:bg-red-500/50 transition"
+                      onClick={() => handleOpenDeleteModal(p)}
+                      className="flex items-center gap-1 bg-red-500/30 border border-red-400 text-red-200 rounded-lg px-3 py-1 text-sm hover:bg-red-500/50 transition cursor-pointer"
                     >
                       <Trash2 size={16} />
                       Delete
                     </button>
-                    <button className="flex items-center gap-1 bg-white/20 border border-white/40 text-white rounded-lg px-3 py-1 text-sm hover:bg-white/30 transition">
+                    <button
+                      onClick={() => openEditModal(p)}
+                      className="flex items-center gap-1 bg-white/20 border border-white/40 text-white rounded-lg px-3 py-1 text-sm hover:bg-white/30 transition cursor-pointer"
+                    >
                       <Edit size={16} />
                       Edit
                     </button>
@@ -140,13 +182,20 @@ export default function AiPromptsPage() {
         </div>
       </div>
 
-      {/* Add Prompt Modal */}
+      {/* Add / Edit Prompt Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center items-center z-50">
           <div className="bg-[#1E1E1E] text-white rounded-2xl p-6 w-[400px] shadow-2xl border border-white/20">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-semibold">Add AI Prompt</h2>
-              <button onClick={() => setIsModalOpen(false)}className="text-gray-400 hover:text-white cursor-pointer"><X size={22} /></button>
+              <h2 className="text-lg font-semibold">
+                {editingPromptId ? "Edit AI Prompt" : "Add AI Prompt"}
+              </h2>
+              <button
+                onClick={() => setIsModalOpen(false)}
+                className="text-gray-400 hover:text-white cursor-pointer"
+              >
+                <X size={22} />
+              </button>
             </div>
 
             <label className="text-sm">Prompt Name</label>
@@ -167,7 +216,7 @@ export default function AiPromptsPage() {
               rows={3}
               value={newPrompt.action}
               onChange={(e) =>
-                setNewPrompt({ ...newPrompt,action: e.target.value })
+                setNewPrompt({ ...newPrompt, action: e.target.value })
               }
             />
 
@@ -179,10 +228,46 @@ export default function AiPromptsPage() {
                 Cancel
               </button>
               <button
-                onClick={handleAddPrompt}
+                onClick={handleSavePrompt}
                 className="flex items-center gap-1 bg-white/20 border border-white/40 text-white rounded-lg px-3 py-1 text-sm hover:bg-white/30 transition cursor-pointer"
               >
-                Create
+                {editingPromptId ? "Save Changes" : "Create"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Modal */}
+      {deletePrompt && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex justify-center items-center z-50">
+          <div className="bg-[#1E1E1E] border border-white/20 rounded-2xl p-6 w-[380px] text-white shadow-2xl relative">
+            <button
+              onClick={handleCloseDeleteModal}
+              className="absolute top-4 right-4 text-gray-400 hover:text-white cursor-pointer"
+            >
+              <X size={22} />
+            </button>
+            <h2 className="text-lg font-semibold mb-2">
+              Delete Prompt “{deletePrompt.name}”?
+            </h2>
+            <p className="text-gray-400 text-sm mb-6">
+              This action cannot be undone. Are you sure you want to delete this
+              AI Prompt?
+            </p>
+
+            <div className="flex justify-end gap-3 mt-2">
+              <button
+                onClick={handleCloseDeleteModal}
+                className="text-gray-400 hover:text-white cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmDelete}
+                className="flex items-center gap-1 bg-red-500/30 border border-red-400 text-red-200 rounded-lg px-4 py-1 text-sm cursor-pointer hover:bg-red-500/50 transition"
+              >
+                <Trash2 size={16} /> Delete
               </button>
             </div>
           </div>
